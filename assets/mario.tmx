@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="100" height="13" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="mario1" tilewidth="32" tileheight="32">
+  <image source="mario1.png" width="352" height="288"/>
+ </tileset>
+ <tileset firstgid="100" name="mario2" tilewidth="32" tileheight="32">
+  <image source="mario2.png" width="608" height="384"/>
+ </tileset>
+ <layer name="Capa de Patrones 1" width="100" height="13">
+  <data encoding="base64" compression="zlib">
+   eJzt00sOgkAMBuC5gYfwWBwE3ZjIElR8sRTfntPfBJKJMZ0ZbJgGuvjCgmmntKU0xpRKNQpYRbg3j3i3VCeo4Tyyu312on1XEGdCcyq6R9ROtO9q4swvfexZ15lL2RUJ/yJnf7p+D3cfpMx36HsylvoVv2lj8vWMXddQLC2ceReRYiXU/4+jhSvnFnawh0OPsRLqp6xh4zGPzDGPFGYw97jzBnd4wBNeAblcsaFcdSdMNfj25wJXR+xnDpU1j0SJ8gYXRsBb
+  </data>
+ </layer>
+</map>

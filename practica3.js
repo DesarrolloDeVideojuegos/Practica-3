@@ -48,7 +48,7 @@ window.addEventListener("load",function() {
       this.add("2d, aiBounce");
       this.on("bump.top",this, function(collision){
         if(collision.obj.isA("Player")){
-          this.p.dead = true;
+          this.destroy();
         }
       });
 
@@ -64,7 +64,7 @@ window.addEventListener("load",function() {
 
   Q.Enemy.extend("Goomba", {
     init: function(p) {
-      this._super(p,{
+      this._super({
         sheet:"goomba",
         x:500,
         y:380
@@ -73,11 +73,16 @@ window.addEventListener("load",function() {
   });
   Q.Enemy.extend("Bloopa", {
     init: function(p) {
-      this._super(p,{
+      this._super({
         sheet:"bloopa",
-        x:500,
-        y:300
+        x:550,
+        y:600,
+        gravity:0
       })
+      this.on("bump.bottom", this, "hit");
+    },
+    step:function(){
+      this.p.y = 400;
     }
   });
 
@@ -88,8 +93,8 @@ window.addEventListener("load",function() {
     Q.stageTMX("level.tmx",stage);
     var player = stage.insert(new Q.Player());
     stage.add("viewport").follow(player, {x:true, y:true}, {minX:0, minY:0, maxY:600});
-    stage.insert(new Q.Enemy({sheet:"goomba",x:500,y:380}));
-    stage.insert(new Q.Enemy({sheet:"bloopa",x:700,y:400}));
+    stage.insert(new Q.Bloopa());
+    stage.insert(new Q.Goomba());
 
   });
 
