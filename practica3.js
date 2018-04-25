@@ -19,7 +19,8 @@ window.addEventListener("load",function() {
     },
 
     reset:function(){
-      Q.stageScene("level1");
+      Q.stageScene("endGame",1, { label: "You Died" });
+      this.destroy();
       //this.p.x = 150;
       //this.p.y = 380;
     },
@@ -37,7 +38,7 @@ window.addEventListener("load",function() {
   });
 
 //
-//  GOOMBA
+//  ENEMY
 //
   Q.Sprite.extend("Enemy", {
     init:function(p){
@@ -87,6 +88,20 @@ window.addEventListener("load",function() {
   });
 
 //
+//  PRINCESS
+//
+  Q.Sprite.extend("Princess",{
+    init: function(p){
+      this._super(p,{
+        asset: "princess.png",
+        x: 2020,
+        y: 452,
+      })
+    }
+
+  });
+
+//
 //  SCENE
 //
   Q.scene("level1",function(stage) {
@@ -95,10 +110,26 @@ window.addEventListener("load",function() {
     stage.add("viewport").follow(player, {x:true, y:true}, {minX:0, minY:0, maxY:600});
     stage.insert(new Q.Bloopa());
     stage.insert(new Q.Goomba());
-
+    stage.insert(new Q.Princess());
   });
 
-  Q.load("mario_small.json, mario_small.png, goomba.json, goomba.png, bloopa.json, bloopa.png", function(){
+  Q.scene("endGame",function(stage) {
+    var box = stage.insert(new Q.UI.Container({
+      x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"
+    }));
+    
+    var button = box.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC",
+                                             label: "Play Again" }))         
+    var label = box.insert(new Q.UI.Text({x:10, y: -10 - button.p.h, 
+                                          label: stage.options.label }));
+    button.on("click",function() {
+      Q.clearStages();
+      Q.stageScene("level1");
+    });
+    box.fit(20);
+  });
+
+  Q.load("mario_small.json, mario_small.png, goomba.json, goomba.png, bloopa.json, bloopa.png, princess.png", function(){
     Q.compileSheets("mario_small.png", "mario_small.json");
     Q.compileSheets("goomba.png", "goomba.json");
     Q.compileSheets("bloopa.png", "bloopa.json");
@@ -109,4 +140,5 @@ window.addEventListener("load",function() {
       Q.stageScene("level1");
     });
   })
+
 });
