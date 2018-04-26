@@ -10,31 +10,43 @@ window.addEventListener("load",function() {
     init:function(p){
       this._super(p, {
         sheet: "mario",
+        sprite: "marioAnim",
         x:150,
         y:380
       });
-      this.add('2d, platformerControls');
+      this.add('2d, platformerControls, animation, tween');
       this.on("enemy.hit","enemyHit");
     },
 
     reset:function(){
       Q.stageScene("endGame",1, { label: "You Died" });
       this.destroy();
-      //this.p.x = 150;
-      //this.p.y = 380;
     },
 
     step:function(dt){
-      //this.super.step(dt);
+      //console.log(this.p.vx);
+      if(this.p.landed>0){
+        if(this.p.vx != 0) {
+          this.play("walk_" + this.p.direction);
+        } else {
+          this.play("stand_" + this.p.direction);
+        }
+      } else{
+        this.play("jump_" + this.p.direction);
+      }
+
       if(this.p.y > 700){
         this.reset();
       }
     },
 
     enemyHit:function(){
-      this.reset();
-    },
+      this.play("death");
 
+      this.animate({x: this.p.x, y: this.p.y - 50}, 1, Q.Easing.Quadratic.Out, {delay: 5});
+      //this.animate({x: this.p.x, y: maxYvp}, 2, Q.Easing.Quadratic.In);
+      this.reset();
+    }
 
   });
 
@@ -44,12 +56,16 @@ window.addEventListener("load",function() {
   Q.Sprite.extend("Enemy", {
     init:function(p){
       this._super(p,{
+        sheet: p.sheet,
+        sprite: p.sprite,
         vx:50,
-        defaultDirection:'left'
+        //direction:'left'
       });
-      this.add("2d, aiBounce");
+      this.add("2d, aiBounce, animation, tween");
       this.on("bump.top",this, function(collision){
         if(collision.obj.isA("Player")){
+          this.play("dead");
+
           this.destroy();
         }
       });
@@ -57,9 +73,14 @@ window.addEventListener("load",function() {
       this.on("bump.left,bump.right", this, "hit");
     },
 
+    step:function(p){
+
+      this.play("walk");
+    },
+
     hit:function(col){
       if(col.obj.isA("Player")){
-          col.obj.trigger("enemy.hit");
+        col.obj.trigger("enemy.hit");
       }
     }
   })
@@ -68,22 +89,27 @@ window.addEventListener("load",function() {
     init: function(p) {
       this._super({
         sheet:"goomba",
+        sprite:"goombaAnim",
         x:500,
         y:380
       })
     }
   });
+
   Q.Enemy.extend("Bloopa", {
     init: function(p) {
       this._super({
         sheet:"bloopa",
+        sprite:"bloopaAnim",
         x:550,
         y:600,
         gravity:0
       })
       this.on("bump.bottom", this, "hit");
     },
+
     step:function(){
+      this.play("walk");
       this.p.y = 400;
     }
   });
@@ -111,10 +137,11 @@ window.addEventListener("load",function() {
 //
 //  SCENE
 //
+  var maxYvp = 600;
   Q.scene("level1",function(stage) {
     Q.stageTMX("level.tmx",stage);
     var player = stage.insert(new Q.Player());
-    stage.add("viewport").follow(player, {x:true, y:true}, {minX:0, minY:0, maxY:600});
+    stage.add("viewport").follow(player, {x:true, y:true}, {minX:0, minY:0, maxY:maxYvp});
     stage.insert(new Q.Bloopa());
     stage.insert(new Q.Goomba());
     stage.insert(new Q.Princess());
@@ -161,15 +188,22 @@ window.addEventListener("load",function() {
     Q.compileSheets("mario_small.png", "mario_small.json");
     Q.compileSheets("goomba.png", "goomba.json");
     Q.compileSheets("bloopa.png", "bloopa.json");
-    Q.animations("Player", {
-      walk_right: { frames: [1,2,3], rate: 1/15, loop: true },
-      walk_left: { frames:  [15,16,17], rate: 1/15, loop: true },
+    Q.animations("marioAnim", {
+      walk_right: { frames: [1,2,3], rate: 1/8, loop: true },
+      walk_left: { frames:  [15,16,17], rate: 1/8, loop: true },
       jump_right: { frames: [4], rate: 1/10 },
       jump_left: { frames:  [18], rate: 1/10 },
       stand_right: { frames:[0], rate: 1/10 },
       stand_left: { frames: [14], rate: 1/10 },
-      death: {frames: [12], rate: 1 }
-    })
+      death: {frames: [12], loop: false }
+    });
+
+    var EnemyAnimations = {
+      walk: { frames: [0,1], rate: 1/3, loop: true },
+      dead: { frames: [2], loop: false }
+    }
+    Q.animations("goombaAnim", EnemyAnimations);
+    Q.animations("bloopaAnim", EnemyAnimations);
 
 
 
