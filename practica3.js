@@ -15,7 +15,6 @@ window.addEventListener("load",function() {
       });
       this.add('2d, platformerControls');
       this.on("enemy.hit","enemyHit");
-     // this.on("sensor.end","sensorEnd");
     },
 
     reset:function(){
@@ -137,7 +136,9 @@ window.addEventListener("load",function() {
     box.fit(20);
   });
   
+  var title = true;
   Q.scene("title",function(stage) {
+    title = true;
     var button = stage.insert(new Q.UI.Button({
       asset: "mainTitle.png",
       x: Q.width/2, 
@@ -145,17 +146,34 @@ window.addEventListener("load",function() {
     }));
     button.on("click", function(){
       Q.stageScene("level1");
-    })
+      title = false;
+    });
+    Q.input.on("confirm", function(){
+      //button.click();
+      if(title){
+        Q.stageScene("level1");
+        title = false;
+      }
+    });
   })
 
   Q.load("mario_small.json, mario_small.png, goomba.json, goomba.png, bloopa.json, bloopa.png, princess.png, mainTitle.png", function(){
     Q.compileSheets("mario_small.png", "mario_small.json");
     Q.compileSheets("goomba.png", "goomba.json");
     Q.compileSheets("bloopa.png", "bloopa.json");
+    Q.animations("Player", {
+      walk_right: { frames: [1,2,3], rate: 1/15, loop: true },
+      walk_left: { frames:  [15,16,17], rate: 1/15, loop: true },
+      jump_right: { frames: [4], rate: 1/10 },
+      jump_left: { frames:  [18], rate: 1/10 },
+      stand_right: { frames:[0], rate: 1/10 },
+      stand_left: { frames: [14], rate: 1/10 },
+      death: {frames: [12], rate: 1 }
+    })
+
+
 
     Q.loadTMX("level.tmx", function() {
-      //Q.compileSheets("sprites.png","sprites.json");
-     
       Q.stageScene("title");
     });
   })
