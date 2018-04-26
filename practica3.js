@@ -12,7 +12,9 @@ window.addEventListener("load",function() {
         sheet: "mario",
         sprite: "marioAnim",
         x:150,
-        y:380
+        y:380,
+        dead:false,
+        end:false
       });
       this.add('2d, platformerControls, animation, tween');
       this.on("enemy.hit","enemyHit");
@@ -25,27 +27,32 @@ window.addEventListener("load",function() {
 
     step:function(dt){
       //console.log(this.p.vx);
-      if(this.p.landed>0){
-        if(this.p.vx != 0) {
-          this.play("walk_" + this.p.direction);
-        } else {
-          this.play("stand_" + this.p.direction);
+      if(!this.p.dead){
+        if(this.p.landed>0){
+          if(this.p.vx != 0) {
+            this.play("walk_" + this.p.direction);
+          } else {
+            this.play("stand_" + this.p.direction);
+          }
+        } else{
+          this.play("jump_" + this.p.direction);
         }
-      } else{
-        this.play("jump_" + this.p.direction);
-      }
 
-      if(this.p.y > 700){
-        this.reset();
+        if(this.p.y > 700){
+          this.reset();
+        }
+      }else{
+        this.play("death");
       }
     },
 
     enemyHit:function(){
-      this.play("death");
-
-      this.animate({x: this.p.x, y: this.p.y - 50}, 1, Q.Easing.Quadratic.Out, {delay: 5});
-      //this.animate({x: this.p.x, y: maxYvp}, 2, Q.Easing.Quadratic.In);
-      this.reset();
+      this.p.dead = true;
+      this.del("2d, platformerControls");
+      this.animate({x: this.p.x, y: this.p.y-100, angle: 0}, 0.5, Q.Easing.Quadratic.Out)
+          .chain({x: this.p.x, y: maxYvp+100}, 1, Q.Easing.Quadratic.In,
+                  {callback: function(){this.reset()}});
+          
     }
 
   });
@@ -59,29 +66,34 @@ window.addEventListener("load",function() {
         sheet: p.sheet,
         sprite: p.sprite,
         vx:50,
-        //direction:'left'
+        direction:"left",
+        dead: false
       });
       this.add("2d, aiBounce, animation, tween");
-      this.on("bump.top",this, function(collision){
-        if(collision.obj.isA("Player")){
-          this.play("dead");
-
-          this.destroy();
-        }
-      });
-
+      this.on("bump.top",this, "killed");
       this.on("bump.left,bump.right", this, "hit");
     },
 
     step:function(p){
-
-      this.play("walk");
+      if(!this.p.dead){
+        this.play("walk");
+      }else{
+        this.play("dead");
+      }
     },
 
     hit:function(col){
       if(col.obj.isA("Player")){
         col.obj.trigger("enemy.hit");
       }
+    },
+
+    killed:function(col){
+      if(col.obj.isA("Player")){
+          this.p.dead = true;
+          this.del("2d, aiBounce");
+          this.animate(0.25, {callback: function(){this.destroy(); }})
+        }
     }
   })
 
@@ -101,8 +113,8 @@ window.addEventListener("load",function() {
       this._super({
         sheet:"bloopa",
         sprite:"bloopaAnim",
-        x:550,
-        y:600,
+        x:800,
+        y:700,
         gravity:0
       })
       this.on("bump.bottom", this, "hit");
@@ -195,12 +207,12 @@ window.addEventListener("load",function() {
       jump_left: { frames:  [18], rate: 1/10 },
       stand_right: { frames:[0], rate: 1/10 },
       stand_left: { frames: [14], rate: 1/10 },
-      death: {frames: [12], loop: false }
+      death: {frames: [12], rate: 1, loop: false }
     });
 
     var EnemyAnimations = {
       walk: { frames: [0,1], rate: 1/3, loop: true },
-      dead: { frames: [2], loop: false }
+      dead: { frames: [2], rate: 1, loop: false }
     }
     Q.animations("goombaAnim", EnemyAnimations);
     Q.animations("bloopaAnim", EnemyAnimations);
