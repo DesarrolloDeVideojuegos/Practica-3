@@ -18,6 +18,7 @@ window.addEventListener("load",function() {
       });
       this.add('2d, platformerControls, animation, tween');
       this.on("enemy.hit","enemyHit");
+      //this.on("enemy.killed", "enemyKilled");
     },
 
     reset:function(){
@@ -49,9 +50,8 @@ window.addEventListener("load",function() {
     enemyHit:function(){
       this.p.dead = true;
       this.del("2d, platformerControls");
-      this.animate({x: this.p.x, y: this.p.y-100, angle: 0}, 0.5, Q.Easing.Quadratic.Out)
-          .chain({x: this.p.x, y: maxYvp+100}, 1, Q.Easing.Quadratic.In,
-                  {callback: function(){this.reset()}});
+      this.animate({x: this.p.x, y: this.p.y-100}, 0.5, Q.Easing.Quadratic.Out)
+          .chain({x: this.p.x, y: maxYvp+100}, 1, Q.Easing.Quadratic.In, {callback: this.reset});
           
     }
 
@@ -65,8 +65,8 @@ window.addEventListener("load",function() {
       this._super(p,{
         sheet: p.sheet,
         sprite: p.sprite,
-        vx:50,
-        direction:"left",
+        vx:-50,
+        direction:'left',
         dead: false
       });
       this.add("2d, aiBounce, animation, tween");
@@ -91,8 +91,11 @@ window.addEventListener("load",function() {
     killed:function(col){
       if(col.obj.isA("Player")){
           this.p.dead = true;
+          //col.obj.trigger("enemy.killed");
           this.del("2d, aiBounce");
-          this.animate(0.25, {callback: function(){this.destroy(); }})
+          this.animate(0.25, {callback: this.destroy});
+          col.obj.p.vy += -300;
+
         }
     }
   })
@@ -113,17 +116,13 @@ window.addEventListener("load",function() {
       this._super({
         sheet:"bloopa",
         sprite:"bloopaAnim",
-        x:800,
-        y:700,
+        x:1000,
+        y:450,
         gravity:0
       })
       this.on("bump.bottom", this, "hit");
-    },
-
-    step:function(){
-      this.play("walk");
-      this.p.y = 400;
     }
+
   });
 
 //
@@ -170,7 +169,7 @@ window.addEventListener("load",function() {
                                           label: stage.options.label }));
     button.on("click",function() {
       Q.clearStages();
-      Q.stageScene("level1");
+      Q.stageScene("title");
     });
     box.fit(20);
   });
@@ -188,7 +187,6 @@ window.addEventListener("load",function() {
       title = false;
     });
     Q.input.on("confirm", function(){
-      //button.click();
       if(title){
         Q.stageScene("level1");
         title = false;
