@@ -93,7 +93,7 @@ window.addEventListener("load",function() {
           this.p.dead = true;
           //col.obj.trigger("enemy.killed");
           this.del("2d, aiBounce");
-          this.animate(0.25, {callback: this.destroy});
+          this.animate({callback: this.destroy});
           col.obj.p.vy += -300;
 
         }
@@ -132,9 +132,9 @@ window.addEventListener("load",function() {
     init: function(p){
       this._super(p,{
         asset: "princess.png",
-        x: 2020,
+        x: 2020,   
         y: 452,
-        sensor: true
+        sensor: true,
       })
       this.on("sensor");
     },
@@ -144,6 +144,36 @@ window.addEventListener("load",function() {
       Q.stageScene("endGame", 2, {label: "You win!"});
     }
   });
+
+//
+//  COIN
+//
+  Q.Sprite.extend("Coin",{
+    init: function(p){
+      this._super(p,{
+        sheet: "coin",
+        sprite: "coinAnim",
+        x:250,
+        y:500,
+        sensor: true,
+
+      })
+      this.add("animation, tween");
+      this.on("sensor");
+    },
+    step: function(dt){
+      this.play("staying");
+    },
+
+    sensor:function(){
+      this.animate({ x: this.p.x, y:  this.p.y - 25 }, 0.25, Q.Easing.Linear, {callback: this.destroy});
+      console.log(this);
+      
+      //Q.stage().pause();
+      //Q.stageScene("endGame", 2, {label: "You win!"});
+    }
+  });
+
 
 //
 //  SCENE
@@ -156,6 +186,7 @@ window.addEventListener("load",function() {
     stage.insert(new Q.Bloopa());
     stage.insert(new Q.Goomba());
     stage.insert(new Q.Princess());
+    stage.insert(new Q.Coin());
   });
 
   Q.scene("endGame",function(stage) {
@@ -194,10 +225,11 @@ window.addEventListener("load",function() {
     });
   })
 
-  Q.load("mario_small.json, mario_small.png, goomba.json, goomba.png, bloopa.json, bloopa.png, princess.png, mainTitle.png", function(){
+  Q.load("mario_small.json, mario_small.png, goomba.json, goomba.png, bloopa.json, bloopa.png, princess.png, mainTitle.png, coin.png, coin.json", function(){
     Q.compileSheets("mario_small.png", "mario_small.json");
     Q.compileSheets("goomba.png", "goomba.json");
     Q.compileSheets("bloopa.png", "bloopa.json");
+    Q.compileSheets("coin.png", "coin.json");
     Q.animations("marioAnim", {
       walk_right: { frames: [1,2,3], rate: 1/8, loop: true },
       walk_left: { frames:  [15,16,17], rate: 1/8, loop: true },
@@ -212,9 +244,12 @@ window.addEventListener("load",function() {
       walk: { frames: [0,1], rate: 1/3, loop: true },
       dead: { frames: [2], rate: 1, loop: false }
     }
+    var CoinAnimations = {
+      staying: {frames: [0, 1, 2], rate: 1/2, loop: true },
+    }
     Q.animations("goombaAnim", EnemyAnimations);
     Q.animations("bloopaAnim", EnemyAnimations);
-
+    Q.animations("coinAnim", CoinAnimations);
 
 
     Q.loadTMX("level.tmx", function() {
