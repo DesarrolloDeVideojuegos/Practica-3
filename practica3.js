@@ -102,6 +102,15 @@ Q.SPRITE_PRINCESS = 8;
         this.animate(0.25,{callback: this.destroy});
         col.obj.p.vy += -350;
       }
+    },
+
+    killed:function(col){
+      if(col.obj.isA("Player")){
+          this.p.dead = true;
+          this.del("2d, aiBounce");
+          this.animate(0.25,{callback: this.destroy});
+          col.obj.p.vy += -300;
+        }
     }
   })
 
@@ -141,6 +150,7 @@ Q.SPRITE_PRINCESS = 8;
       }
     }
   });
+
 
 //
 //  PRINCESS
