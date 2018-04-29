@@ -3,6 +3,12 @@ window.addEventListener("load",function() {
                 .setup({height: 480, width: 320})
                 .controls().touch();
 
+
+Q.SPRITE_PLAYER = 1;
+Q.SPRITE_COINS = 2;
+Q.SPRITE_ENEMY = 4;
+Q.SPRITE_PRINCESS = 8;
+
 //
 //  PLAYER
 //
@@ -14,11 +20,12 @@ window.addEventListener("load",function() {
         x:150,
         y:380,
         dead:false,
-        end:false
+        end:false,
+        type: Q.SPRITE_PLAYER,
+        collisionMask: Q.SPRITE_DEFAULT | Q.SPRITE_COINS | Q.SPRITE_ENEMY | Q.SPRITE_PRINCESS
       });
       this.add('2d, platformerControls, animation, tween');
       this.on("enemy.hit","enemyHit");
-      //this.on("enemy.killed", "enemyKilled");
     },
 
     reset:function(){
@@ -27,7 +34,6 @@ window.addEventListener("load",function() {
     },
 
     step:function(dt){
-      //console.log(this.p.vx);
       if(!this.p.dead){
         if(this.p.landed>0){
           if(this.p.vx != 0) {
@@ -66,8 +72,9 @@ window.addEventListener("load",function() {
         sheet: p.sheet,
         sprite: p.sprite,
         vx:-50,
-        direction:'left',
-        dead: false
+        dead: false,
+        type: Q.SPRITE_ENEMY,
+        collisionMask: Q.SPRITE_DEFAULT | Q.SPRITE_PLAYER
       });
       this.add("2d, aiBounce, animation, tween");
       this.on("bump.top",this, "killed");
@@ -85,6 +92,15 @@ window.addEventListener("load",function() {
     hit:function(col){
       if(col.obj.isA("Player")){
         col.obj.trigger("enemy.hit");
+      }
+    },
+
+    killed:function(col){
+      if(col.obj.isA("Player")){
+        this.p.dead = true;
+        this.del("2d, aiBounce");
+        this.animate(0.25,{callback: this.destroy});
+        col.obj.p.vy += -350;
       }
     },
 
@@ -122,8 +138,7 @@ window.addEventListener("load",function() {
         gravity:0
       })
       this.on("bump.bottom", this, "hit");
-    },
-    
+    },   
     
     step:function(p){
       if(!this.p.dead){
@@ -133,9 +148,7 @@ window.addEventListener("load",function() {
       }else{
         this.play("dead");
       }
-
-    },
-
+    }
   });
 
 
@@ -149,6 +162,8 @@ window.addEventListener("load",function() {
         x: 2020,   
         y: 452,
         sensor: true,
+        type: Q.SPRITE_PRINCESS,
+        collisionMask: Q.SPRITE_PLAYER
       })
       this.on("sensor");
     },
@@ -172,10 +187,13 @@ window.addEventListener("load",function() {
         y:500,
         sensor: true,
         took: false,
+        type: Q.SPRITE_COINS,
+        collisionMask: Q.SPRITE_PLAYER
       })
       this.add("animation, tween");
       this.on("sensor");
     },
+
     step: function(dt){
       this.play("staying");
     },
@@ -186,7 +204,6 @@ window.addEventListener("load",function() {
       this.animate({ x: this.p.x, y:  this.p.y - 25 }, 0.25, Q.Easing.Linear, {callback: this.destroy});
       Q.state.inc("score",100);
       this.p.took = true; 
-      console.log("Coin up");
     }
   });
 
@@ -257,10 +274,12 @@ Q.scene("hud",function(stage) {
       x: Q.width/2, 
       y: Q.height/2
     }));
+
     button.on("click", function(){
       Q.stageScene("level1");
       title = false;
     });
+
     Q.input.on("confirm", function(){
       if(title){
         Q.stageScene("level1");
@@ -288,13 +307,14 @@ Q.scene("hud",function(stage) {
       walk: { frames: [0,1], rate: 2/3, loop: true },
       dead: { frames: [2], rate: 1, loop: false }
     }
+
     var CoinAnimations = {
       staying: {frames: [0, 1, 2], rate: 1/2, loop: true },
     }
+
     Q.animations("goombaAnim", EnemyAnimations);
     Q.animations("bloopaAnim", EnemyAnimations);
     Q.animations("coinAnim", CoinAnimations);
-
 
     Q.loadTMX("level.tmx", function() {
       Q.stageScene("title");
