@@ -91,11 +91,9 @@ window.addEventListener("load",function() {
     killed:function(col){
       if(col.obj.isA("Player")){
           this.p.dead = true;
-          //col.obj.trigger("enemy.killed");
           this.del("2d, aiBounce");
-          this.animate({callback: this.destroy});
+          this.animate(0.25,{callback: this.destroy});
           col.obj.p.vy += -300;
-
         }
     }
   })
@@ -118,12 +116,28 @@ window.addEventListener("load",function() {
         sprite:"bloopaAnim",
         x:1000,
         y:450,
+        vx:-35,
+        vy:0,
+        i:0,
         gravity:0
       })
       this.on("bump.bottom", this, "hit");
-    }
+    },
+    
+    
+    step:function(p){
+      if(!this.p.dead){
+        this.play("walk");
+        this.p.vy = 250 * Math.sin(this.p.i);
+        this.p.i += 2*Math.PI / 75;
+      }else{
+        this.play("dead");
+      }
+
+    },
 
   });
+
 
 //
 //  PRINCESS
@@ -148,6 +162,7 @@ window.addEventListener("load",function() {
 //
 //  COIN
 //
+
   Q.Sprite.extend("Coin",{
     init: function(p){
       this._super(p,{
@@ -156,7 +171,7 @@ window.addEventListener("load",function() {
         x:250,
         y:500,
         sensor: true,
-
+        took: false,
       })
       this.add("animation, tween");
       this.on("sensor");
@@ -166,20 +181,49 @@ window.addEventListener("load",function() {
     },
 
     sensor:function(){
+      if(this.p.took)
+        return;
       this.animate({ x: this.p.x, y:  this.p.y - 25 }, 0.25, Q.Easing.Linear, {callback: this.destroy});
-      console.log(this);
-      
-      //Q.stage().pause();
-      //Q.stageScene("endGame", 2, {label: "You win!"});
+      Q.state.inc("score",100);
+      this.p.took = true; 
+      console.log("Coin up");
     }
   });
 
+//
+//  SCORE
+//
+
+Q.UI.Text.extend("Score",{
+  init: function() {
+    this._super({
+      label: "score: 0",
+      align: "center",
+      x: Q.width/2,
+      y: 40,
+      weight: "normal",
+      size:18
+    });
+
+    Q.state.on("change.score",this,"score");
+  },
+
+  score: function(score) {
+    this.p.label = "score: " + score;
+  }
+});
+
+Q.scene("hud",function(stage) {
+  stage.insert(new Q.Score());
+}, { stage: 1 });
 
 //
 //  SCENE
 //
   var maxYvp = 600;
   Q.scene("level1",function(stage) {
+    Q.state.reset({ score: 0 });
+    Q.stageScene("hud"); 
     Q.stageTMX("level.tmx",stage);
     var player = stage.insert(new Q.Player());
     stage.add("viewport").follow(player, {x:true, y:true}, {minX:0, minY:0, maxY:maxYvp});
@@ -241,7 +285,7 @@ window.addEventListener("load",function() {
     });
 
     var EnemyAnimations = {
-      walk: { frames: [0,1], rate: 1/3, loop: true },
+      walk: { frames: [0,1], rate: 2/3, loop: true },
       dead: { frames: [2], rate: 1, loop: false }
     }
     var CoinAnimations = {
