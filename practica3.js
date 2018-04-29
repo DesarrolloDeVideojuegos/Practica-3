@@ -66,66 +66,66 @@ Q.SPRITE_PRINCESS = 8;
 //
 //  ENEMY
 //
-  Q.Sprite.extend("Enemy", {
-    init:function(p){
-      this._super(p,{
-        sheet: p.sheet,
-        sprite: p.sprite,
-        vx:-50,
-        dead: false,
-        type: Q.SPRITE_ENEMY,
-        collisionMask: Q.SPRITE_DEFAULT | Q.SPRITE_PLAYER
-      });
-      this.add("2d, aiBounce, animation, tween");
-      this.on("bump.top",this, "killed");
-      this.on("bump.left,bump.right", this, "hit");
+
+  Q.component("defaultEnemy", {
+    defaults: {
+      dead: false,
+      type: Q.SPRITE_ENEMY,
+      collisionMask: Q.SPRITE_DEFAULT | Q.SPRITE_PLAYER
+    },
+
+    added: function(){
+      var p = this.entity.p;
+
+      Q._defaults(p,this.defaults);
+      
+      this.entity.add("2d, aiBounce, animation, tween");
+      this.entity.on("step",this,"step");
+      this.entity.on("bump.top",this,"killed");
+      this.entity.on("bump.left,bump.right,bump.bottom", this, "hit");
     },
 
     step:function(p){
-      if(!this.p.dead){
-        this.play("walk");
+      var p = this.entity.p;
+      if(!p.dead){
+        this.entity.play("walk");
       }else{
-        this.play("dead");
+        this.entity.play("dead");
       }
     },
 
     hit:function(col){
-      if(col.obj.isA("Player")){
-        col.obj.trigger("enemy.hit");
+      if(col.obj.isA("Player") && !col.obj.dead){
+        this.entity.del("2d, platformerControls");
+        col.obj.trigger("enemy.hit");      
       }
     },
 
     killed:function(col){
+      var p = this.entity.p;
       if(col.obj.isA("Player")){
-        this.p.dead = true;
-        this.del("2d, aiBounce");
-        this.animate(0.25,{callback: this.destroy});
+        p.dead = true;
+        this.entity.del("2d, aiBounce");
+        this.entity.animate(0.25,{callback: this.entity.destroy});
         col.obj.p.vy += -350;
       }
-    },
-
-    killed:function(col){
-      if(col.obj.isA("Player")){
-          this.p.dead = true;
-          this.del("2d, aiBounce");
-          this.animate(0.25,{callback: this.destroy});
-          col.obj.p.vy += -300;
-        }
     }
-  })
+  });
 
-  Q.Enemy.extend("Goomba", {
+  Q.Sprite.extend("Goomba", {
     init: function(p) {
       this._super({
         sheet:"goomba",
         sprite:"goombaAnim",
         x:500,
-        y:380
+        y:380,
+        vx: -50
       })
+      this.add("defaultEnemy");
     }
   });
 
-  Q.Enemy.extend("Bloopa", {
+  Q.Sprite.extend("Bloopa", {
     init: function(p) {
       this._super({
         sheet:"bloopa",
@@ -137,20 +137,16 @@ Q.SPRITE_PRINCESS = 8;
         i:0,
         gravity:0
       })
-      this.on("bump.bottom", this, "hit");
+      this.add("defaultEnemy");
     },   
     
     step:function(p){
       if(!this.p.dead){
-        this.play("walk");
         this.p.vy = 250 * Math.sin(this.p.i);
         this.p.i += 2*Math.PI / 75;
-      }else{
-        this.play("dead");
       }
     }
   });
-
 
 //
 //  PRINCESS
